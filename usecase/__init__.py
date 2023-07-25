@@ -8,6 +8,8 @@ import os
 import config
 output_root = config.OUTPUT_ROOT
 
+print('出力ディレクトリ = ' + str(output_root))
+
 def mkdir(dir: str):
     if not os.path.isdir(dir):
         os.mkdir(dir)
@@ -53,46 +55,36 @@ def test():
         util.create_concrete_from_params('entity/entity.test.ts.j2', entity, f'{entity_output_dir}/{entity_name}.test.ts')
 
         # アプリケーション層の出力ルートディレクトリ作成
-        application_root = f'../src/lib/server'
-        application_output_dir = f'{application_root}/{entity_name}'
-        if not os.path.isdir(application_output_dir):
-            os.mkdir(application_output_dir)
+        presentation_root = f'../src/lib/server'
+        presentation_output_dir = f'{presentation_root}/{entity_name}'
+        if not os.path.isdir(presentation_output_dir):
+            os.mkdir(presentation_output_dir)
         # アプリケーション層とそのテストコード
-        util.create_concrete_from_params('entity/applicationService.ts.j2', entity, f'{application_output_dir}/{entity_name}ApplicationService.ts')
-        util.create_concrete_from_params('entity/applicationService.test.ts.j2', entity, f'{application_output_dir}/{entity_name}ApplicationService.test.ts')
+        util.create_concrete_from_params('entity/presentationService.ts.j2', entity, f'{presentation_output_dir}/{entity_name}presentationService.ts')
+        util.create_concrete_from_params('entity/presentationService.test.ts.j2', entity, f'{presentation_output_dir}/{entity_name}presentationService.test.ts')
     return
 
 # エンティティのイコールは識別子が一致していることであり、
 # 値オブジェクトのイコールは全てのメンバが一致しているってことかな?
 
-# アプリケーション層より内側CLIから動作できるものを作成する
-def application(extension: str):
+# プレゼンテーション層より外側(フレームワークに依存する所など)を作成する。
+# 拡張子が指定できるのはseleniumなど言語が複数選べる場合を考慮してはいるがたいていは指定する必要が内容にしておく。
+def presentation(framework: str, extension: str):
+    print('プレゼンテーション層の出力を行います')
     domain_root = f'{output_root}/Domain'
     mkdir(domain_root)
     value_object_root = f'{domain_root}/ValueObject'
     mkdir(value_object_root)
-    #infrastructure_root = f'{output_root}/Infrastructure'
-    #mkdir(infrastructure_root)
-    application_root = f'{output_root}/Application'
-    mkdir(application_root)
+    # 画面毎に出力しないといけないのでWebアプリの場合はURLリストみたいな感じ
+    presentation_root = f'{output_root}/presentation'
+    mkdir(presentation_root)
     domain_file_name = 'entity/entity.json'
     domain_file = codecs.open(domain_file_name, 'r', 'utf8')
     domain_dict = json.load(domain_file)
     for entity in domain_dict.get('entityList'):
         domain_name = entity['name']
-
-        # ドメイン層
-        entity_output_dir = f'{domain_root}/{domain_name}'
-        mkdir(entity_output_dir)
-        util.create_concrete_from_params(f'entity/{extension}/entity.{extension}.j2', entity, f'{entity_output_dir}/{domain_name}.{extension}')
-
-        # インフラストラクチャー層(使わないかもしれないので今はインフラストラクチャー層は無し)
-        # infrastructure_output_dir = f'{infrastructure_root}/{domain_name}'
-        # mkdir(infrastructure_output_dir)
-        # util.create_concrete_from_params('entity/infrastructure.ts.j2', entity, f'{infrastructure_output_dir}/{domain_name}.php')
-
         # アプリケーション層
-        application_output_dir = f'{application_root}/{domain_name}'
-        mkdir(application_output_dir)
-        util.create_concrete_from_params(f'entity/{extension}/applicationService.{extension}.j2', entity, f'{application_output_dir}/{domain_name}ApplicationService.{extension}')
+        presentation_output_dir = f'{presentation_root}/{domain_name}'
+        mkdir(presentation_output_dir)
+        util.create_concrete_from_params(f'entity/{extension}/presentationService.{extension}.j2', entity, f'{presentation_output_dir}/{domain_name}presentationService.{extension}')
     return
